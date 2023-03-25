@@ -1,0 +1,17 @@
+﻿@model IEnumerable<UmbXSS.Models.BlogCommentViewModel>
+
+@if (Model.Any())
+{
+    foreach (var comment in Model)
+    {
+        <p>
+            <strong>Name:</strong> @comment.Name
+            <br />
+            <strong>Message:</strong> @Html.Raw(comment.Message)
+        </p>
+    }
+}
+else
+{
+    <p>Be the first to add a comment using the form below.</p>
+}

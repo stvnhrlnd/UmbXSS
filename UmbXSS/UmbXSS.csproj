@@ -322,11 +322,29 @@
     <Content Include="config\Lang\sv-SE.user.xml" />
     <Content Include="config\Lang\zh-CN.user.xml" />
     <Content Include="config\logviewer.searches.config.js" />
+    <Content Include="css\clean-blog.css" />
+    <Content Include="css\dropdownStyles.css" />
+    <Content Include="css\prettify.css" />
     <Content Include="Global.asax" />
+    <Content Include="scripts\clean-blog.js" />
+    <Content Include="scripts\contactForm.js" />
+    <Content Include="scripts\jquery.unobtrusive-ajax.min.js" />
+    <Content Include="scripts\jquery.validate.min.js" />
+    <Content Include="scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="scripts\run_prettify.js" />
+    <Content Include="vendor\bootstrap\css\bootstrap.min.css" />
+    <Content Include="vendor\bootstrap\js\bootstrap.bundle.min.js" />
+    <Content Include="vendor\fontawesome-free\css\all.min.css" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-brands-400.svg" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-regular-400.svg" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-solid-900.svg" />
+    <Content Include="vendor\jquery\jquery.min.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\BlogCommentsComponent.cs" />
+    <Compile Include="Controllers\BlogCommentsController.cs" />
+    <Compile Include="Models\BlogCommentViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -352,6 +370,37 @@
     <Content Include="Views\Partials\Grid\Bootstrap3.cshtml" />
     <Content Include="Views\Partials\Grid\Bootstrap3-Fluid.cshtml" />
     <Content Include="Views\Partials\BlockList\Default.cshtml" />
+    <Content Include="Views\article.cshtml" />
+    <Content Include="Views\articleList.cshtml" />
+    <Content Include="Views\contact.cshtml" />
+    <Content Include="Views\content.cshtml" />
+    <Content Include="Views\error.cshtml" />
+    <Content Include="Views\home.cshtml" />
+    <Content Include="Views\master.cshtml" />
+    <Content Include="Views\search.cshtml" />
+    <Content Include="Views\xMLSitemap.cshtml" />
+    <Content Include="Views\Partials\Contact\contactForm.cshtml" />
+    <Content Include="Views\Partials\Contact\result.cshtml" />
+    <Content Include="Views\Partials\footer.cshtml" />
+    <Content Include="Views\Partials\latestArticles.cshtml" />
+    <Content Include="Views\Partials\mainNavigation.cshtml" />
+    <Content Include="Views\Partials\metaData.cshtml" />
+    <Content Include="Views\Partials\pageHeader.cshtml" />
+    <Content Include="Views\Partials\xmlSitemap.cshtml" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-brands-400.eot" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-brands-400.ttf" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-brands-400.woff" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-brands-400.woff2" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-regular-400.eot" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-regular-400.ttf" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-regular-400.woff" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-regular-400.woff2" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-solid-900.eot" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-solid-900.ttf" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-solid-900.woff" />
+    <Content Include="vendor\fontawesome-free\webfonts\fa-solid-900.woff2" />
+    <Content Include="Views\Partials\CommentForm.cshtml" />
+    <Content Include="Views\Partials\CommentsList.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -359,6 +408,7 @@
       <DependentUpon>Web.config</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

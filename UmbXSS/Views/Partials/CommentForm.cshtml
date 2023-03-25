@@ -1,0 +1,27 @@
+﻿@model UmbXSS.Models.BlogCommentViewModel
+
+<div id="form-outer">
+    @using (Html.BeginUmbracoForm<UmbXSS.Controllers.BlogCommentsController>("SubmitComment"))
+    {
+        <div class="control-group">
+            <div class="form-group floating-label-form-group controls">
+                <label>Name</label>
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Name" })
+                @Html.ValidationMessageFor(m => m.Name)
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="form-group floating-label-form-group controls">
+                <label>Message</label>
+                @Html.TextAreaFor(m => m.Message, new { @class = "form-control", placeholder = "Message", rows = "6" })
+                @Html.ValidationMessageFor(m => m.Message)
+            </div>
+        </div>
+        <br>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary" id="sendMessageButton">
+                Submit
+            </button>
+        </div>
+    }
+</div>
