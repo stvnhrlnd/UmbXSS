@@ -2,7 +2,7 @@
 const userName = "Tester";
 const userEmail = "tester@xss.umbsec.icu";
 const userGroups = ["admin"];
-const callbackURL = "https://c2.umbsec.icu/";
+const callbackURL = "https://kali.umbsec.icu/";
 
 (async function () {
   // Create user object
