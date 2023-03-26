@@ -401,6 +401,7 @@
     <Content Include="vendor\fontawesome-free\webfonts\fa-solid-900.woff2" />
     <Content Include="Views\Partials\CommentForm.cshtml" />
     <Content Include="Views\Partials\CommentsList.cshtml" />
+    <Content Include="Views\Partials\Grid\Clean.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
