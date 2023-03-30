@@ -17,7 +17,7 @@ const triggerHeaderName = "Authorization";
   const originalTemplate = template.content;
 
   // Add payload to the end of the template
-  template.content += generatePayloadRazor();
+  template.content += generateRazor();
 
   // Save template
   const saveTemplate = await postJSON(`${umbracoAPI}/Template/PostSave`, template);
@@ -72,7 +72,7 @@ const triggerHeaderName = "Authorization";
     return JSON.parse(responseText.slice(6));
   }
 
-  function generatePayloadRazor() {
+  function generateRazor() {
     return `
 @if (!string.IsNullOrEmpty(Request.Headers["${triggerHeaderName}"]))
 {
