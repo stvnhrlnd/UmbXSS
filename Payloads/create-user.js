@@ -1,8 +1,8 @@
 // Payload configuration
 const userName = "Tester";
-const userEmail = "tester@xss.umbsec.icu";
+const userEmail = "tester@demo.umbsec.icu";
 const userGroups = ["admin"];
-const callbackURL = "https://kali.umbsec.icu/";
+const callbackURL = "http://kali.umbsec.icu/";
 
 (async function () {
   // Create user object
